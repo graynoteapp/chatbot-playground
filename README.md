@@ -46,6 +46,45 @@ This template uses the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) t
 
 With the [AI SDK](https://ai-sdk.dev/docs/introduction), you can also switch to direct LLM providers like [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://ai-sdk.dev/providers/ai-sdk-providers) with just a few lines of code.
 
+## Production Setup
+
+This repository is configured for a production Vercel deployment with managed Postgres, Redis, Blob storage, Auth.js, and AI Gateway.
+
+Required production environment variables:
+
+- `AUTH_SECRET`: Auth.js session signing secret. Generate one with `openssl rand -base64 32`.
+- `POSTGRES_URL`: Postgres connection string used by Drizzle migrations and runtime queries.
+- `BLOB_READ_WRITE_TOKEN`: Vercel Blob token used for file uploads.
+- `REDIS_URL`: Redis connection string used for resumable streams and rate limiting.
+- `AI_GATEWAY_API_KEY`: required only when deploying outside Vercel.
+- `AUTH_URL`: recommended for self-hosted deployments and should match the public app origin.
+
+Run the production environment check before deploying:
+
+```bash
+pnpm env:check
+```
+
+For self-hosted deployments, require the AI Gateway key as well:
+
+```bash
+pnpm env:check -- --target=self-hosted
+```
+
+Run the full production readiness check when production secrets are available locally:
+
+```bash
+pnpm production:check
+```
+
+For self-hosted deployments, run:
+
+```bash
+DEPLOY_TARGET=self-hosted pnpm production:check
+```
+
+This validates the environment, runs linting, and verifies a production build without applying database migrations. Normal deploy builds still run migrations through `pnpm build`.
+
 ## Deploy Your Own
 
 You can deploy your own version of Chatbot to Vercel with one click:
