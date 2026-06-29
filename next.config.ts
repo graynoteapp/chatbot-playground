@@ -2,8 +2,12 @@ import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
 
 const basePath = process.env.IS_DEMO === "1" ? "/demo" : "";
+const allowedDevOrigins = process.env.NEXT_ALLOWED_DEV_ORIGINS?.split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 const nextConfig: NextConfig = {
+  ...(allowedDevOrigins?.length ? { allowedDevOrigins } : {}),
   ...(basePath
     ? {
         basePath,
