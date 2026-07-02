@@ -13,6 +13,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (process.env.JIRO_PREVIEW_BYPASS_AUTH === "1") {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,

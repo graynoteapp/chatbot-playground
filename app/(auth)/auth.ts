@@ -3,7 +3,11 @@ import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import { DUMMY_PASSWORD } from "@/lib/constants";
-import { createGuestUser, getUser } from "@/lib/db/queries";
+import {
+  createGuestUser,
+  ensurePreviewUser,
+  getUser,
+} from "@/lib/db/queries";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular";
@@ -30,12 +34,7 @@ declare module "next-auth/jwt" {
   }
 }
 
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
+const nextAuth = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
@@ -97,3 +96,25 @@ export const {
     },
   },
 });
+
+export const {
+  handlers: { GET, POST },
+  signIn,
+  signOut,
+} = nextAuth;
+
+export const auth = (async (...args: unknown[]) => {
+  if (process.env.JIRO_PREVIEW_BYPASS_AUTH !== "1") {
+    return (nextAuth.auth as (...authArgs: unknown[]) => unknown)(...args);
+  }
+
+  const previewUser = await ensurePreviewUser();
+
+  return {
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      ...previewUser,
+      type: "guest",
+    },
+  };
+}) as typeof nextAuth.auth;
