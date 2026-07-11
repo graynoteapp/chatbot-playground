@@ -15,6 +15,7 @@ import { useTheme } from "next-themes";
 import {
   type ChangeEvent,
   type Dispatch,
+  type FormEvent,
   memo,
   type SetStateAction,
   useCallback,
@@ -139,8 +140,26 @@ function PureMultimodalInput({
     setLocalStorageInput(input);
   }, [input, setLocalStorageInput]);
 
-  const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = event.target.value;
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    const handleNativeInput = () => {
+      setInput(textarea.value);
+    };
+
+    textarea.addEventListener("input", handleNativeInput);
+    return () => textarea.removeEventListener("input", handleNativeInput);
+  }, [setInput]);
+
+  const handleInput = (
+    event:
+      | ChangeEvent<HTMLTextAreaElement>
+      | FormEvent<HTMLTextAreaElement>
+  ) => {
+    const val = event.currentTarget.value;
     setInput(val);
 
     if (val.startsWith("/") && !val.includes(" ")) {
@@ -476,6 +495,7 @@ function PureMultimodalInput({
           className="min-h-24 text-[13px] leading-relaxed px-4 pt-3.5 pb-1.5 placeholder:text-muted-foreground/35"
           data-testid="multimodal-input"
           onChange={handleInput}
+          onInput={handleInput}
           onKeyDown={(e) => {
             if (slashOpen) {
               const filtered = slashCommands.filter((cmd) =>

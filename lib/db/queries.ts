@@ -74,6 +74,35 @@ export async function createGuestUser() {
   }
 }
 
+export const PREVIEW_USER_ID = "00000000-0000-4000-8000-000000000001";
+export const PREVIEW_USER_EMAIL = "guest-preview";
+
+export async function ensurePreviewUser() {
+  const password = generateHashedPassword(generateUUID());
+
+  try {
+    await db
+      .insert(user)
+      .values({
+        id: PREVIEW_USER_ID,
+        email: PREVIEW_USER_EMAIL,
+        password,
+        isAnonymous: true,
+      })
+      .onConflictDoNothing({ target: user.id });
+
+    return {
+      id: PREVIEW_USER_ID,
+      email: PREVIEW_USER_EMAIL,
+    };
+  } catch (_error) {
+    throw new ChatbotError(
+      "bad_request:database",
+      "Failed to create preview user"
+    );
+  }
+}
+
 export async function saveChat({
   id,
   userId,
